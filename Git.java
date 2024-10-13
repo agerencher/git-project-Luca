@@ -1,11 +1,16 @@
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.channels.FileChannel;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 public class Git{
     public static void main(String[] args) throws IOException {
         initializeRepo();
@@ -15,8 +20,9 @@ public class Git{
         File git = new File("git");
         File objects = new File("git/objects");
         File index = new File("git/index");
+        File head = new File("git/HEAD");
 
-        if (git.exists() && objects.exists() && index.exists()) {
+        if (git.exists() && objects.exists() && index.exists() && head.exists()) {
             System.out.println ("Git Repository already exists");
         }
         else {
@@ -26,8 +32,9 @@ public class Git{
                 objects.mkdir();
             if (!index.exists())
                 index.createNewFile();
+            if (!head.exists())
+                head.createNewFile();
         }
-        
     }
 
     public static void deleteRepo() {
@@ -174,6 +181,94 @@ public class Git{
             writer.write("tree " + hash + " " + path);
             writer.write(System.lineSeparator());
             writer.close();
+        }
+    }
+
+    public static void makeCommit(String author, String message) throws IOException, NoSuchAlgorithmException{
+        File rootTree = new File("git/rootTree");
+        String rootTreeHash = generateFileName(rootTree.getPath());
+        File commit = new File("git/objects/tempCommit");
+        commit.createNewFile();
+        File head = new File("git/HEAD");
+
+
+        BufferedWriter commitWriter = new BufferedWriter(new FileWriter(commit.getPath()));
+        commitWriter.write("tree: " + rootTreeHash);
+        commitWriter.newLine();
+
+        commitWriter.write("parent: ");
+        BufferedReader headReader = new BufferedReader(new FileReader(head.getPath()));
+        String headHash = headReader.readLine();
+        headReader.close();
+        if(headHash != null)
+            commitWriter.write(headHash);
+        else
+            commitWriter.write("null");
+        commitWriter.newLine();
+
+        commitWriter.write("author: " + author);
+        commitWriter.newLine();
+
+        LocalDate currentDate = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM d, yyyy");
+        String date = currentDate.format(formatter);
+        commitWriter.write("date: " + date);
+        commitWriter.newLine();
+
+        commitWriter.write("message: " + message);
+
+        commitWriter.close();
+
+        File newCommitFile = new File("git/objects/" + generateFileName(commit.getPath()));
+        commit.renameTo(newCommitFile);
+
+        BufferedWriter headWriter = new BufferedWriter(new FileWriter(head.getPath()));
+        if (headHash != null) {
+            head.delete();
+            head.createNewFile();
+        }
+        headWriter.write(newCommitFile.getName());
+        headWriter.newLine();
+        headWriter.close();   
+    }
+
+    public static void createTree() throws IOException {
+        File head = new File("git/HEAD");
+        File rootTree = new File("git/rootTree");
+        rootTree.createNewFile();
+        File index = new File("git/index");
+
+        BufferedReader indexReader = new BufferedReader(new FileReader(index.getPath()));
+        BufferedWriter treeWriter = new BufferedWriter(new FileWriter(rootTree.getPath()));
+
+        while (indexReader.ready()) {
+            String tempIndex = indexReader.readLine();
+            treeWriter.write(tempIndex);
+            treeWriter.newLine();
+        }
+        indexReader.close();
+        treeWriter.close();
+
+
+        BufferedReader headReader = new BufferedReader(new FileReader(head.getPath()));
+        String headHash = headReader.readLine();
+        headReader.close();
+        if(headHash != null) {
+            File previousCommit = new File("git/objects/" + headHash);
+            BufferedReader commitReader = new BufferedReader(new FileReader(previousCommit.getPath()));
+            String prevTreeHash = commitReader.readLine().substring(6, commitReader.readLine().length());
+            commitReader.close();
+            File previousTree = new File("git/objects/" + prevTreeHash);
+
+            BufferedReader prevTreeReader = new BufferedReader(new FileReader(previousTree.getPath()));
+            BufferedWriter treeWriter2 = new BufferedWriter(new FileWriter(rootTree.getPath()));
+            while (prevTreeReader.ready()) {
+                String tempTree = prevTreeReader.readLine();
+                treeWriter2.write(tempTree);
+                treeWriter2.newLine();
+            }
+            prevTreeReader.close();
+            treeWriter2.close();
         }
     }
 }

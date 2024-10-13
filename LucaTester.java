@@ -20,7 +20,14 @@ public class LucaTester {
 
         Git.initializeRepo();
         Git.createNewBlob("root");
-        
+
+        Git.createTree();
+        Git.makeCommit("anthonyTest1", "please work");
+
+        File testAddFileThing = new File("root/testAddFileThing");
+        testAddFileThing.createNewFile();
+        Git.createTree();
+        Git.makeCommit("anthonyTest2", "please work!!");
     }
 
     public static void testSetup1() throws IOException{
