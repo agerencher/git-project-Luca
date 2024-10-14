@@ -196,6 +196,11 @@ public class Git{
         commitWriter.write("tree: " + rootTreeHash);
         commitWriter.newLine();
 
+        File newTree = new File("git/objects/" + rootTreeHash);
+        //newTree.createNewFile();
+        rootTree.renameTo(newTree);
+        rootTree.createNewFile();
+
         commitWriter.write("parent: ");
         BufferedReader headReader = new BufferedReader(new FileReader(head.getPath()));
         String headHash = headReader.readLine();
@@ -229,17 +234,22 @@ public class Git{
         }
         headWriter.write(newCommitFile.getName());
         headWriter.newLine();
-        headWriter.close();   
+        headWriter.close();
+
+        File index = new File("git/index");
+        index.delete();
+        index.createNewFile();
     }
 
     public static void createTree() throws IOException {
         File head = new File("git/HEAD");
         File rootTree = new File("git/rootTree");
-        rootTree.createNewFile();
+        if (!rootTree.exists())
+            rootTree.createNewFile();
         File index = new File("git/index");
 
         BufferedReader indexReader = new BufferedReader(new FileReader(index.getPath()));
-        BufferedWriter treeWriter = new BufferedWriter(new FileWriter(rootTree.getPath()));
+        BufferedWriter treeWriter = new BufferedWriter(new FileWriter(rootTree.getPath(), true));
 
         while (indexReader.ready()) {
             String tempIndex = indexReader.readLine();
@@ -256,12 +266,12 @@ public class Git{
         if(headHash != null) {
             File previousCommit = new File("git/objects/" + headHash);
             BufferedReader commitReader = new BufferedReader(new FileReader(previousCommit.getPath()));
-            String prevTreeHash = commitReader.readLine().substring(6, commitReader.readLine().length());
+            String prevTreeHash = commitReader.readLine().substring(6);
             commitReader.close();
             File previousTree = new File("git/objects/" + prevTreeHash);
 
             BufferedReader prevTreeReader = new BufferedReader(new FileReader(previousTree.getPath()));
-            BufferedWriter treeWriter2 = new BufferedWriter(new FileWriter(rootTree.getPath()));
+            BufferedWriter treeWriter2 = new BufferedWriter(new FileWriter(rootTree.getPath(), true));
             while (prevTreeReader.ready()) {
                 String tempTree = prevTreeReader.readLine();
                 treeWriter2.write(tempTree);

@@ -26,6 +26,13 @@ public class LucaTester {
 
         File testAddFileThing = new File("root/testAddFileThing");
         testAddFileThing.createNewFile();
+        FileWriter fw2 = new FileWriter(testAddFileThing);
+        fw2.append("test 2nd commit");
+        fw2.close();
+
+
+
+        Git.createNewBlob("root/testAddFileThing");
         Git.createTree();
         Git.makeCommit("anthonyTest2", "please work!!");
     }
