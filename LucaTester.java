@@ -9,6 +9,8 @@ public class LucaTester {
         deleteDirectory("git");
         deleteDirectory("temp folder");
 
+        Git repo = new Git();
+
         testSetup1();
 
         File tempFile = new File("tempFile.txt");
@@ -18,11 +20,10 @@ public class LucaTester {
         fw1.close();
 
 
-        Git.initializeRepo();
-        Git.createNewBlob("root");
+        repo.initializeRepo();
+        repo.stage("root");
 
-        Git.createTree();
-        Git.makeCommit("anthonyTest1", "please work");
+        repo.commit("anthonyTest1", "please work");
 
         File testAddFileThing = new File("root/testAddFileThing");
         testAddFileThing.createNewFile();
@@ -32,17 +33,27 @@ public class LucaTester {
 
 
 
-        Git.createNewBlob("root/testAddFileThing");
-        Git.createTree();
-        Git.makeCommit("anthonyTest2", "please work!!");
+        repo.stage("root/testAddFileThing");
+        repo.commit("anthonyTest2", "please work!!");
 
         FileWriter fw3 = new FileWriter(testAddFileThing);
         fw3.append("\nthis is new edited text");
         fw3.close();
 
-        Git.createNewBlob("root/testAddFileThing");
-        Git.createTree();
-        Git.makeCommit("anthonyTest3", "please work123123!!");
+        repo.stage("root/testAddFileThing");
+        repo.commit("anthonyTest3", "please work123123!!");
+
+
+        File addDirectory = new File("root/addDirectory");
+        addDirectory.mkdir();
+        File insideDirectory = new File("root/addDirectory/insideDirectory");
+        insideDirectory.createNewFile();
+        FileWriter fw4 = new FileWriter(insideDirectory);
+        fw4.append("inside the added directory");
+        fw4.close();
+
+        repo.stage("root/addDirectory");
+        repo.commit("anthonyTest4", "hello");
 
     }
 

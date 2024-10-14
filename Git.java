@@ -291,9 +291,8 @@ public class Git implements GitInterface{
 
                 boolean containsCopy = false;
                 for (int i = 0; i < indexNames.size(); i++) {
-                    if(tempTree.contains(indexNames.get(i))) {
+                    if(tempTree.contains(indexNames.get(i)))
                         containsCopy = true;
-                    }
                 }
                 if (!containsCopy) {
                     treeWriter2.write(tempTree);
