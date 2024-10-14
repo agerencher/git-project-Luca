@@ -226,12 +226,11 @@ public class Git{
 
         File newCommitFile = new File("git/objects/" + generateFileName(commit.getPath()));
         commit.renameTo(newCommitFile);
-
-        BufferedWriter headWriter = new BufferedWriter(new FileWriter(head.getPath()));
         if (headHash != null) {
             head.delete();
             head.createNewFile();
         }
+        BufferedWriter headWriter = new BufferedWriter(new FileWriter(head.getPath()));
         headWriter.write(newCommitFile.getName());
         headWriter.newLine();
         headWriter.close();
