@@ -262,8 +262,10 @@ public class Git implements GitInterface{
         BufferedReader indexReader = new BufferedReader(new FileReader(index.getPath()));
         BufferedWriter treeWriter = new BufferedWriter(new FileWriter(rootTree.getPath(), true));
 
+        ArrayList<String> indexNames = new ArrayList<>();
         while (indexReader.ready()) {
             String tempIndex = indexReader.readLine();
+            indexNames.add(tempIndex.substring(46));
             treeWriter.write(tempIndex);
             treeWriter.newLine();
         }
@@ -285,8 +287,19 @@ public class Git implements GitInterface{
             BufferedWriter treeWriter2 = new BufferedWriter(new FileWriter(rootTree.getPath(), true));
             while (prevTreeReader.ready()) {
                 String tempTree = prevTreeReader.readLine();
-                treeWriter2.write(tempTree);
-                treeWriter2.newLine();
+
+
+                boolean containsCopy = false;
+                for (int i = 0; i < indexNames.size(); i++) {
+                    if(tempTree.contains(indexNames.get(i))) {
+                        containsCopy = true;
+                    }
+                }
+                if (!containsCopy) {
+                    treeWriter2.write(tempTree);
+                    treeWriter2.newLine();
+                    containsCopy = false;
+                }
             }
             prevTreeReader.close();
             treeWriter2.close();

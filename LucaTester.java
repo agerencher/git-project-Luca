@@ -35,6 +35,15 @@ public class LucaTester {
         Git.createNewBlob("root/testAddFileThing");
         Git.createTree();
         Git.makeCommit("anthonyTest2", "please work!!");
+
+        FileWriter fw3 = new FileWriter(testAddFileThing);
+        fw3.append("\nthis is new edited text");
+        fw3.close();
+
+        Git.createNewBlob("root/testAddFileThing");
+        Git.createTree();
+        Git.makeCommit("anthonyTest3", "please work123123!!");
+
     }
 
     public static void testSetup1() throws IOException{
