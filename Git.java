@@ -11,7 +11,7 @@ import java.util.Objects;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
-public class Git{
+public class Git implements GitInterface{
     public static void main(String[] args) throws IOException {
         initializeRepo();
     }
@@ -184,7 +184,7 @@ public class Git{
         }
     }
 
-    public static void makeCommit(String author, String message) throws IOException, NoSuchAlgorithmException{
+    public static String makeCommit(String author, String message) throws IOException, NoSuchAlgorithmException{
         File rootTree = new File("git/rootTree");
         String rootTreeHash = generateFileName(rootTree.getPath());
         File commit = new File("git/objects/tempCommit");
@@ -192,36 +192,51 @@ public class Git{
         File head = new File("git/HEAD");
 
 
-        BufferedWriter commitWriter = new BufferedWriter(new FileWriter(commit.getPath()));
-        commitWriter.write("tree: " + rootTreeHash);
-        commitWriter.newLine();
+        String commitStr = "tree: " + rootTreeHash + "\n";
+
+        //BufferedWriter commitWriter = new BufferedWriter(new FileWriter(commit.getPath()));
+        //commitWriter.write("tree: " + rootTreeHash);
+        //commitWriter.newLine();
 
         File newTree = new File("git/objects/" + rootTreeHash);
         //newTree.createNewFile();
         rootTree.renameTo(newTree);
         rootTree.createNewFile();
 
-        commitWriter.write("parent: ");
+
+
+        commitStr += "parent: ";
+        //commitWriter.write("parent: ");
         BufferedReader headReader = new BufferedReader(new FileReader(head.getPath()));
         String headHash = headReader.readLine();
         headReader.close();
-        if(headHash != null)
-            commitWriter.write(headHash);
-        else
-            commitWriter.write("null");
-        commitWriter.newLine();
+        if(headHash != null) {
+            //commitWriter.write(headHash);
+            commitStr += headHash;
+        }
+        else {
+            //commitWriter.write("null");
+            commitStr += "null\n";
+        }
+        //commitWriter.newLine();
 
-        commitWriter.write("author: " + author);
-        commitWriter.newLine();
+        commitStr += "author: " + author + "\n";
+        //commitWriter.write("author: " + author);
+        //commitWriter.newLine();
 
         LocalDate currentDate = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM d, yyyy");
         String date = currentDate.format(formatter);
-        commitWriter.write("date: " + date);
-        commitWriter.newLine();
+        // commitWriter.write("date: " + date);
+        // commitWriter.newLine();
+        commitStr += "date: " + date + "\n";
 
-        commitWriter.write("message: " + message);
+       // commitWriter.write("message: " + message);
+        commitStr += "message: " + message;
+        //commitWriter.close();
 
+        BufferedWriter commitWriter = new BufferedWriter(new FileWriter(commit.getPath()));
+        commitWriter.write(commitStr);
         commitWriter.close();
 
         File newCommitFile = new File("git/objects/" + generateFileName(commit.getPath()));
@@ -238,6 +253,7 @@ public class Git{
         File index = new File("git/index");
         index.delete();
         index.createNewFile();
+        return commitStr;
     }
 
     public static void createTree() throws IOException {
@@ -279,5 +295,14 @@ public class Git{
             prevTreeReader.close();
             treeWriter2.close();
         }
+    }
+
+    public void stage(String filePath) throws IOException, NoSuchAlgorithmException {
+        createNewBlob(filePath);
+    }
+
+    public String commit(String author, String message) throws IOException, NoSuchAlgorithmException {
+        createTree();
+        return makeCommit(author, message);
     }
 }
