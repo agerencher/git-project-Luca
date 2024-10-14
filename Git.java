@@ -187,13 +187,13 @@ public class Git implements GitInterface{
     public static String makeCommit(String author, String message) throws IOException, NoSuchAlgorithmException{
         File rootTree = new File("git/rootTree");
         String rootTreeHash = generateFileName(rootTree.getPath());
+        //creates commit file
         File commit = new File("git/objects/tempCommit");
         commit.createNewFile();
         File head = new File("git/HEAD");
 
 
-        //String commitStr = "tree: " + rootTreeHash + "\n";
-
+        //writes tree line using the rootTree Hash
         BufferedWriter commitWriter = new BufferedWriter(new FileWriter(commit.getPath()));
         commitWriter.write("tree: " + rootTreeHash);
         commitWriter.newLine();
@@ -204,48 +204,51 @@ public class Git implements GitInterface{
         rootTree.createNewFile();
 
 
-
-        //commitStr += "parent: ";
+        //writes parent line using the HEAD
         commitWriter.write("parent: ");
         BufferedReader headReader = new BufferedReader(new FileReader(head.getPath()));
         String headHash = headReader.readLine();
         headReader.close();
         if(headHash != null) {
             commitWriter.write(headHash);
-            //commitStr += headHash;
         }
         else {
+            //if it is the first commit, parent is null
             commitWriter.write("null");
-            //commitStr += "null\n";
         }
         commitWriter.newLine();
 
-        //commitStr += "author: " + author + "\n";
+        //writes the author from parameter
         commitWriter.write("author: " + author);
         commitWriter.newLine();
 
+        //from google
+        //writes date
         LocalDate currentDate = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM d, yyyy");
         String date = currentDate.format(formatter);
         commitWriter.write("date: " + date);
         commitWriter.newLine();
-        //commitStr += "date: " + date + "\n";
 
+        //writes message from parameter
         commitWriter.write("message: " + message);
-        //commitStr += "message: " + message;
         commitWriter.close();
 
         File newCommitFile = new File("git/objects/" + generateFileName(commit.getPath()));
+        //using the data in commit, makes a new file, then renames the original commit file form line 191 with the hash of the new file
         commit.renameTo(newCommitFile);
         if (headHash != null) {
+            //erases the hash in head
             head.delete();
             head.createNewFile();
         }
+        //writes new latest commit into head
         BufferedWriter headWriter = new BufferedWriter(new FileWriter(head.getPath()));
         headWriter.write(newCommitFile.getName());
         headWriter.newLine();
         headWriter.close();
 
+        //resets index for any furture stages
         File index = new File("git/index");
         index.delete();
         index.createNewFile();
@@ -262,7 +265,9 @@ public class Git implements GitInterface{
         BufferedReader indexReader = new BufferedReader(new FileReader(index.getPath()));
         BufferedWriter treeWriter = new BufferedWriter(new FileWriter(rootTree.getPath(), true));
 
+        //makes arraylist for later to check if there are duplicate names
         ArrayList<String> indexNames = new ArrayList<>();
+        //writes everything from index to tree
         while (indexReader.ready()) {
             String tempIndex = indexReader.readLine();
             indexNames.add(tempIndex.substring(46));
@@ -274,27 +279,32 @@ public class Git implements GitInterface{
 
 
         BufferedReader headReader = new BufferedReader(new FileReader(head.getPath()));
+        //gets the hash of the prev. commit
         String headHash = headReader.readLine();
         headReader.close();
         if(headHash != null) {
             File previousCommit = new File("git/objects/" + headHash);
             BufferedReader commitReader = new BufferedReader(new FileReader(previousCommit.getPath()));
+            //gets the hash of the tree of the previous commit
             String prevTreeHash = commitReader.readLine().substring(6);
             commitReader.close();
             File previousTree = new File("git/objects/" + prevTreeHash);
 
+            //uses the previous commit's tree to copy all non-duplicates into the new tree
             BufferedReader prevTreeReader = new BufferedReader(new FileReader(previousTree.getPath()));
             BufferedWriter treeWriter2 = new BufferedWriter(new FileWriter(rootTree.getPath(), true));
             while (prevTreeReader.ready()) {
                 String tempTree = prevTreeReader.readLine();
 
-
+                //this is where the arraylist is used. If the path of the file is in the arraylist, and tree, it was edited
+                //and there is no need to copy it from the tree
                 boolean containsCopy = false;
                 for (int i = 0; i < indexNames.size(); i++) {
                     if(tempTree.contains(indexNames.get(i)))
                         containsCopy = true;
                 }
                 if (!containsCopy) {
+                    //if there is no duplicate, it just copies from previous commit's tree
                     treeWriter2.write(tempTree);
                     treeWriter2.newLine();
                     containsCopy = false;
