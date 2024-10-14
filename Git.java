@@ -192,11 +192,11 @@ public class Git implements GitInterface{
         File head = new File("git/HEAD");
 
 
-        String commitStr = "tree: " + rootTreeHash + "\n";
+        //String commitStr = "tree: " + rootTreeHash + "\n";
 
-        //BufferedWriter commitWriter = new BufferedWriter(new FileWriter(commit.getPath()));
-        //commitWriter.write("tree: " + rootTreeHash);
-        //commitWriter.newLine();
+        BufferedWriter commitWriter = new BufferedWriter(new FileWriter(commit.getPath()));
+        commitWriter.write("tree: " + rootTreeHash);
+        commitWriter.newLine();
 
         File newTree = new File("git/objects/" + rootTreeHash);
         //newTree.createNewFile();
@@ -205,38 +205,34 @@ public class Git implements GitInterface{
 
 
 
-        commitStr += "parent: ";
-        //commitWriter.write("parent: ");
+        //commitStr += "parent: ";
+        commitWriter.write("parent: ");
         BufferedReader headReader = new BufferedReader(new FileReader(head.getPath()));
         String headHash = headReader.readLine();
         headReader.close();
         if(headHash != null) {
-            //commitWriter.write(headHash);
-            commitStr += headHash;
+            commitWriter.write(headHash);
+            //commitStr += headHash;
         }
         else {
-            //commitWriter.write("null");
-            commitStr += "null\n";
+            commitWriter.write("null");
+            //commitStr += "null\n";
         }
-        //commitWriter.newLine();
+        commitWriter.newLine();
 
-        commitStr += "author: " + author + "\n";
-        //commitWriter.write("author: " + author);
-        //commitWriter.newLine();
+        //commitStr += "author: " + author + "\n";
+        commitWriter.write("author: " + author);
+        commitWriter.newLine();
 
         LocalDate currentDate = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM d, yyyy");
         String date = currentDate.format(formatter);
-        // commitWriter.write("date: " + date);
-        // commitWriter.newLine();
-        commitStr += "date: " + date + "\n";
+        commitWriter.write("date: " + date);
+        commitWriter.newLine();
+        //commitStr += "date: " + date + "\n";
 
-       // commitWriter.write("message: " + message);
-        commitStr += "message: " + message;
-        //commitWriter.close();
-
-        BufferedWriter commitWriter = new BufferedWriter(new FileWriter(commit.getPath()));
-        commitWriter.write(commitStr);
+        commitWriter.write("message: " + message);
+        //commitStr += "message: " + message;
         commitWriter.close();
 
         File newCommitFile = new File("git/objects/" + generateFileName(commit.getPath()));
@@ -253,7 +249,7 @@ public class Git implements GitInterface{
         File index = new File("git/index");
         index.delete();
         index.createNewFile();
-        return commitStr;
+        return newCommitFile.getName();
     }
 
     public static void createTree() throws IOException {
